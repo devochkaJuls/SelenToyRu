@@ -2,18 +2,19 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
-import org.testng.Assert;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.lang3.StringUtils;
+
+import org.openqa.selenium.JavascriptExecutor;
 
 public class ToyRuTest extends BaseTest {
 
 
     @Test
-    public void addBacketLegoGoods() {
+    public void addBasketLegoGoods() {
         Actions actions = new Actions(driver);
         // тестируем главную страницу
         // вводим в поиск LEGO и проверяем первый товар на странице - в названии есть слово LEGO
@@ -34,11 +35,12 @@ public class ToyRuTest extends BaseTest {
 
         // проверяем меньше ли 30 ти товаров на странице? (на странице отобржается по 30 товаров)
         // если товаров больше, то ищем рандомный товар из 30, а если меньше то из длины листа кнопок
-        int num = 30;
+        int num = 29;
         if ((int) cartButtons.size() < 30){
             num = (int) cartButtons.size() - 1;
         }
-
+        // счетчик товаров в корзине
+        int countToyInBasket = 0;
 
             //три раза выбираем рандомный товар и добавляем в корзину
             for (int i = 0; i < 3; i++) {
@@ -48,8 +50,13 @@ public class ToyRuTest extends BaseTest {
                 actions = new Actions(driver);
                 driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
                 actions.moveToElement(button).click().build().perform();
+                countToyInBasket++; // добавляем в счетчик кол-во товаров в корзине
 
-                driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
+                // ожидаем прибавления товаров в корзине и после этого проверяем доступные товары для дбавления в корзину
+                WebElement countGoods = driver.findElement(By.xpath("//*[@id=\"basket_count\"]"));
+                actions.moveToElement(countGoods).build().perform();
+                wait.until(ExpectedConditions.textToBePresentInElementValue(countGoods, String.valueOf(countToyInBasket)));
+                //driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
                 cartButtons = driver.findElements(By.xpath("//*[text()='В корзину']"));
             }
 
@@ -65,8 +72,10 @@ public class ToyRuTest extends BaseTest {
         driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
        WebElement totalSum = driver.findElement(By.xpath("//*[@id=\"order_form_content\"]/div[1]/div/div/script[3]/text()"));
 
+        String htmlCode = (String) ((JavascriptExecutor) driver).executeScript("return arguments[0].innerHTML;", totalSum);
+        System.out.println(htmlCode);
 
-        System.out.println("СУММА ТОВАРОВ В КОРЗИНЕ : " + totalSum.getAttribute("totalvalue"));
+        //System.out.println("СУММА ТОВАРОВ В КОРЗИНЕ : " + totalSum.getAttribute("totalvalue"));
 
     }
 
